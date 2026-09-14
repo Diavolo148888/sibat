@@ -292,6 +292,9 @@ def main(argv=None) -> None:
     rep.add_argument("scan_id", help="scan id or 'latest'")
     rep.add_argument("--out", default="reports")
 
+    dp = sub.add_parser("dashboard", help="launch the operator console (localhost web UI)")
+    dp.add_argument("port", nargs="?", type=int, default=8788)
+
     args = p.parse_args(argv)
 
     if args.cmd == "scope":
@@ -306,6 +309,10 @@ def main(argv=None) -> None:
         cmd_scans(args)
     elif args.cmd == "report":
         cmd_report(args)
+    elif args.cmd == "dashboard":
+        from .dashboard import main as dash_main
+        main_dash = dash_main
+        main_dash(args.port)
 
 
 if __name__ == "__main__":

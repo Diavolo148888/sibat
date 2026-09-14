@@ -1,8 +1,19 @@
 # SIBAT demo lab — deliberately vulnerable, LOCALHOST ONLY.
 # Never expose these services to a network you do not fully own.
+#
+#   web-vuln   : EOL nginx banner, exposed .git/.env, CORS reflection, JS secrets
+#   telnet-ish : open banner socket
+#   vuln-dvwa  : DVWA-class Python clone — traversal + command injection proof
+#                endpoints (implemented in lab/vulapp2.py, safe payloads only)
+#   vuln-redir : open redirect endpoint
+#
+# Docker alternative: replace vuln-dvwa/vuln-redir with real vulhub envs, e.g.
+#   docker run -d --rm -p 127.0.0.1:8083:80 vulhub/nginx:1.20.1-path-traversal
+# (browse https://github.com/vulhub/vulhub for one-command CVE environments)
+
 services:
   web-vuln:
-    image: nginx:1.19-alpine          # ancient nginx on purpose
+    image: nginx:1.19-alpine
     ports:
       - "127.0.0.1:8081:80"
     restart: unless-stopped
@@ -12,4 +23,18 @@ services:
     command: ["sh", "-c", "apk add --no-cache busybox-extras >/dev/null 2>&1; while true; do (echo banner; read _) | nc -l -p 2323; done"]
     ports:
       - "127.0.0.1:8082:2323"
+    restart: unless-stopped
+
+  vuln-dvwa:
+    build:
+      context: .
+    ports:
+      - "127.0.0.1:8083:8083"
+    restart: unless-stopped
+
+  vuln-redir:
+    image: nginx:1.19-alpine
+    command: ["nginx", "-g", "daemon off;"]
+    ports:
+      - "127.0.0.1:8084:80"
     restart: unless-stopped
