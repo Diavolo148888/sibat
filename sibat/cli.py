@@ -154,7 +154,8 @@ def cmd_recon(args) -> None:
         say(f"{BOLD}>> target {target}{R}")
         try:
             result = scan_target(guard, store, target,
-                                 port_spec=args.ports, run_dirs=not args.no_dirs)
+                                 port_spec=args.ports, run_dirs=not args.no_dirs,
+                                 subdomain_enum=args.subs)
         except ScopeError as e:
             say(f"  {RED}[SCOPE] refused: {e}{R}")
             continue
@@ -231,9 +232,16 @@ def cmd_report(args) -> None:
     from .report.html import write_report
 
     store = Store()
-    record = store.get_record(args.scan_id)
+    if args.scan_id == "latest":
+        rows = store.list_scans()
+        if not rows:
+            die("no scans yet — run: python -m sibat recon <target>")
+        scan_id = rows[0]["id"]
+    else:
+        scan_id = int(args.scan_id)
+    record = store.get_record(scan_id)
     if record is None:
-        die(f"scan #{args.scan_id} not found")
+        die(f"scan #{scan_id} not found")
     path = write_report(record, out_dir=args.out)
     uri = path.resolve().as_uri()
     say(f"{GREEN}[+]{R} report written: {path}")
@@ -264,6 +272,8 @@ def main(argv=None) -> None:
     rp.add_argument("--ports", "-p", default="top",
                     help="top | all | full | 80,443 | 1-1024 (default: top)")
     rp.add_argument("--no-dirs", action="store_true", help="skip content discovery stage")
+    rp.add_argument("--subs", action="store_true",
+                    help="passive subdomain enumeration first (crt.sh, scope-filtered)")
 
     mp = sub.add_parser("modules", help="list modules")
 
@@ -276,7 +286,7 @@ def main(argv=None) -> None:
     hp = sub.add_parser("scans", help="list past scans")
 
     rep = sub.add_parser("report", help="render HTML report for a scan")
-    rep.add_argument("scan_id", type=int)
+    rep.add_argument("scan_id", help="scan id or 'latest'")
     rep.add_argument("--out", default="reports")
 
     args = p.parse_args(argv)

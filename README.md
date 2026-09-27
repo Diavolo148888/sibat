@@ -63,18 +63,27 @@ on ports 8081-8082 (localhost-bound only).
 
 ## The pipeline
 
-    resolve -> ports -> services -> web -> dirs
+    [subs] -> resolve -> ports -> services -> web -> cors -> jssecrets -> dirs
 
-1. **resolve** — DNS resolution, PTR records; every resolved IP is
+1. **subs** *(optional, `--subs`)* — passive subdomain enumeration via
+   certificate transparency (crt.sh). Zero packets to the target; every
+   discovered name is scope-checked before it's ever scanned
+2. **resolve** — DNS resolution, PTR records; every resolved IP is
    re-checked against scope (DNS pointing in-scope hosts at excluded
    infrastructure gets refused)
-2. **ports** — TCP connect scan across the top 42 ports (or `top`, `all`,
+3. **ports** — TCP connect scan across the top 42 ports (or `top`, `all`,
    `full`, custom ranges), risk-ranked findings on exposed services
-3. **services** — banner grabs, `Server:` header fingerprints
-4. **web** — HTTP probes, missing security headers, legacy software
-   detection
-5. **dirs** — content discovery: `.git/`, `.env`, backups, admin panels,
-   and other classics
+4. **services** — banner grabs, `Server:` header fingerprints
+5. **web** — HTTP probes on every open port, missing security headers,
+   legacy software detection
+6. **cors** — origin-reflection probe on common API paths; reflected
+   Origin + credentials = the classic reportable CORS bug
+7. **jssecrets** — pulls inline and same-origin JS, hunts secret-looking
+   strings (AWS/GitHub/Stripe keys, JWTs, hard-coded assignments) and
+   extracts API endpoints for manual testing. Every hit is a CANDIDATE —
+   verify it's live before reporting
+8. **dirs** — content discovery across a bounty-grade wordlist: `.git/`,
+   `.env` variants, backups, dumps, CI configs, panels, swagger, CMS depth
 
 Every stage is scope-guarded independently. Findings are deduplicated,
 severity-ranked, and stored in SQLite (`~/.sibat/sibat.db` by default).
@@ -131,6 +140,7 @@ them is your responsibility to authorize properly.
 ## Roadmap
 
 - [x] Phase 1 — recon engine, Scope Guard, modules, HTML reports
+- [x] Phase 1.5 — subdomain enum, CORS probe, JS secret/endpoint extraction, bounty-grade wordlist
 - [ ] Phase 2 — exploit module library against the local lab
 - [ ] Phase 3 — operator console (web UI)
 - [ ] Phase 4 — post-exploitation and evasion research (lab only)

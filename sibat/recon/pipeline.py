@@ -8,29 +8,45 @@ from ..core.db import Store, utcnow
 from ..core.models import Finding
 from ..core.scope import ScopeGuard
 from .. import __version__
-from . import resolver, ports, services, web, dirs
+from . import resolver, ports, services, web, dirs, subdomains, cors, jslinks
 
 
 def scan_target(guard: ScopeGuard, store: Store, target: str,
                 port_spec: str = "top", store_findings: bool = True,
-                run_dirs: bool = True) -> dict:
+                run_dirs: bool = True, subdomain_enum: bool = False) -> dict:
     """Full pipeline for one target. Returns a dict with findings + stats."""
     t0 = time.time()
     started = utcnow()
     findings: list[Finding] = []
 
-    ips, resolve_findings = resolver.run(guard, target)
-    findings.extend(resolve_findings)
+    # Stage 0 (optional): passive subdomain enumeration, scope-filtered.
+    scan_targets = [target]
+    if subdomain_enum:
+        from ..utils.net import is_domainish
+        if is_domainish(target):
+            subs, sub_finds = subdomains.run(guard, target)
+            findings.extend(sub_finds)
+            scan_targets.extend(subs)
 
-    port_findings = ports.run(guard, ips, port_spec=port_spec)
-    findings.extend(port_findings)
+    all_counts: dict[str, int] = {}
+    for tgt in scan_targets:
+        ips, resolve_findings = resolver.run(guard, tgt)
+        findings.extend(resolve_findings)
+        if not ips:
+            continue
 
-    findings.extend(services.run(guard, port_findings))
-    web_findings = web.run(guard, port_findings)
-    findings.extend(web_findings)
+        port_findings = ports.run(guard, ips, port_spec=port_spec)
+        findings.extend(port_findings)
 
-    if run_dirs:
-        findings.extend(dirs.run(guard, web_findings + port_findings))
+        findings.extend(services.run(guard, port_findings))
+        web_findings = web.run(guard, port_findings)
+        findings.extend(web_findings)
+
+        findings.extend(cors.run(guard, web_findings))
+        findings.extend(jslinks.run(guard, web_findings))
+
+        if run_dirs:
+            findings.extend(dirs.run(guard, web_findings + port_findings))
 
     findings = Finding.dedupe(findings)
     elapsed = time.time() - t0

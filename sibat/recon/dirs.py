@@ -9,12 +9,40 @@ from ..core.scope import ScopeGuard
 from .web import http_probe
 
 PATHS = [
+    # classics
     "admin", "admin/", "administrator", "backup", "backups", ".git/config", ".env",
     "config", "config.php", "console", "dashboard", "db", "debug", "docs",
     "graphql", "info.php", "jenkins", "login", "phpinfo.php", "phpmyadmin",
     "private", "readme.txt", "robots.txt", "root", "secret", "server-status",
     "setup", "sql", "test", "tmp", "uploads", "wp-admin", "wp-login.php",
     "xmlrpc.php", ".svn/entries", ".DS_Store",
+    # env/backup/config sprawl (bounty-grade expansion)
+    ".env.local", ".env.production", ".env.backup", ".env.save", ".env~",
+    "env.json", ".env.example",
+    "backup.zip", "backup.tar.gz", "backup.sql", "backups.zip",
+    "db.sql", "dump.sql", "database.sql", "db_backup.sql",
+    "config.json", "config.yml", "config.yaml", "config.bak", "config.old",
+    "configuration.php", "settings.php", "settings.json", "settings.py",
+    "credentials.json", "creds.txt", "secrets.json", "secrets.yml",
+    # dev/CI/ops leaks
+    ".git/HEAD", ".git/index", "Jenkinsfile", "Dockerfile", "docker-compose.yml",
+    ".docker/config.json", ".gitlab-ci.yml", ".github/workflows", ".travis.yml",
+    "composer.json", "package.json", "Gemfile", "requirements.txt", "pom.xml",
+    ".svn/wc.db", ".DS_Store", "Thumbs.db",
+    # panels and tooling
+    "actuator", "actuator/health", "actuator/env", "manager/html", "solr",
+    "kibana", "grafana", "prometheus", "airflow", "nexus", "rancher",
+    "adminer.php", "admin.php", "panel", "cpanel", "webshell", "shell",
+    # CMS depth
+    "wp-content", "wp-config.php.bak", "wp-content/debug.log",
+    "sites/default/settings.php", "administrator/index.php",
+    # api/docs
+    "api", "api/v1", "api/docs", "swagger", "swagger.json", "openapi.json",
+    "swagger-ui", "swagger-ui.html", "api-docs", "v1", "v2", "graphiql",
+    # misc quick wins
+    "cgi-bin", "status", "health", "metrics", "info", "phpinfo.php5",
+    "server-info", "autodiscover/autodiscover.xml", "web.config",
+    ".well-known/security.txt", "security.txt", "sitemap.xml",
 ]
 
 INTERESTING = {".git/config": "high", ".env": "high", ".DS_Store": "low",
