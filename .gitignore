@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Scan artifacts — yours, not git's
+reports/
+*.db
+*.sqlite
+
+# Real engagement scopes never leave the machine.
+# Templates in scopes/ are committed; anything real goes in scopes/private/.
+scopes/private/
+scopes/*.private.yml
+
+# Secrets — BYO keys live in .env, never in the repo
+.env
+*.key

@@ -1,0 +1,9 @@
+# SIBAT demo scope — local lab only.
+engagement:
+  name: Local Lab
+scope:
+  in_scope:
+    - 127.0.0.1
+    - ::1
+    - localhost
+  out_of_scope: []

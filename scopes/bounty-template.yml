@@ -1,0 +1,11 @@
+# SIBAT rules of engagement — BUG BOUNTY TEMPLATE
+# Fill in ONLY what the program's policy authorizes. Read the policy twice.
+engagement:
+  name: Example Bounty Program
+scope:
+  in_scope:
+    - example.com          # exact host
+    - api.example.com      # exact host
+    # - .example.com      # everything under example.com (subdomains)
+  out_of_scope:
+    - admin.example.com    # program said hands off

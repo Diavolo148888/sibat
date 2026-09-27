@@ -1,0 +1,15 @@
+# SIBAT demo lab — deliberately vulnerable, LOCALHOST ONLY.
+# Never expose these services to a network you do not fully own.
+services:
+  web-vuln:
+    image: nginx:1.19-alpine          # ancient nginx on purpose
+    ports:
+      - "127.0.0.1:8081:80"
+    restart: unless-stopped
+
+  telnet-ish:
+    image: alpine:3.12
+    command: ["sh", "-c", "apk add --no-cache busybox-extras >/dev/null 2>&1; while true; do (echo banner; read _) | nc -l -p 2323; done"]
+    ports:
+      - "127.0.0.1:8082:2323"
+    restart: unless-stopped
