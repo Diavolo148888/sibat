@@ -1,4 +1,4 @@
-"""Stage 2 — TCP port scanning (connect scan, thread pool, scope-guarded)."""
+"""Stage 2 — TCP port scanning (connect scan, thread pool, scope-guarded, rate-limited)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import socket
 
 from ..core.models import Finding
 from ..core.scope import ScopeGuard
-from ..utils.net import pmap, parse_port_spec
+from ..utils.net import RateLimiter, pmap, parse_port_spec
 
 TOP_PORTS = [
     21, 22, 23, 25, 53, 80, 81, 110, 111, 135, 139, 143, 443, 445, 993, 995,
@@ -42,14 +42,20 @@ def _probe(ip: str, port: int, timeout: float):
     return None
 
 
+def _probe_r(ip: str, port: int, timeout: float, limiter: RateLimiter):
+    limiter.wait()
+    return _probe(ip, port, timeout)
+
+
 def run(guard: ScopeGuard, ips: list[str], port_spec: str = "top",
-        timeout: float = 1.5, workers: int = 200) -> list[Finding]:
+        timeout: float = 1.5, workers: int = 200, rps: float = 0) -> list[Finding]:
     for ip in ips:
         guard.assert_target(ip)
+    limiter = RateLimiter(rps)
     ports = parse_port_spec(port_spec, TOP_PORTS)
     findings: list[Finding] = []
     for ip in ips:
-        open_ports = pmap(lambda p: _probe(ip, p, timeout), ports, workers=workers)
+        open_ports = pmap(lambda p: _probe_r(ip, p, timeout, limiter), ports, workers=workers)
         for port in sorted(open_ports):
             sev, note = RISKY.get(port, ("info", "port open"))
             findings.append(Finding(

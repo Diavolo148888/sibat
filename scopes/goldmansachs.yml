@@ -1,0 +1,36 @@
+# SIBAT rules of engagement — GOLDMAN SACHS (HackerOne)
+# Built from the program's structured scope fetched 2026-09-28 via the
+# HackerOne GraphQL API (hackerone.com/goldmansachs). VERIFY against the
+# live policy before every hunt — programs change their rules.
+#
+# Policy facts encoded here (from their own text):
+#   - automated scanning ALLOWED, limited to 60 requests per second
+#   - use --rps 60 with every scan against this program
+engagement:
+  name: Goldman Sachs (HackerOne)
+scope:
+  in_scope:
+    - .goldmansachs.com
+    - .gs.com
+    - .goldman.com
+    - .marcus.com
+    - .honestdollar.com
+    - .marcus.co.uk
+    - .gsam.com
+    - .gsselect.com
+    - .gs-mosaic.qa.gs.com
+    - .gs-mosaic.gs.com
+    - .qaglobal-liquidity.gs.com
+    - .global-liquidity.gs.com
+    - .ayco.com
+    - .gspublishing.com
+    - .gs.de
+    - .goldmanpfm.com
+  out_of_scope: []
+    # NOTE: the fetched asset list also includes apigw.foliofn.com,
+    # api.foliofn.com, *.folioclient.com, *.advisorsolutions.gs.com,
+    # developer.gs.com, goldmansachsindices.com, marquee.gs.com,
+    # research.gs.com — listed as URL/OTHER asset types in their program.
+    # The suffix rules above already cover any subdomain of the included
+    # bases; add the extras explicitly if a scan ever needs them, and
+    # re-check the live policy first.

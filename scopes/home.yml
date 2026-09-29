@@ -1,0 +1,16 @@
+# SIBAT rules of engagement — HOME NETWORK AUDIT
+# Your own network. Audit it like a professional.
+#
+# Note: the include list is a strict whitelist — anything NOT listed below
+# is automatically refused by the Scope Guard. No blanket exclusions needed;
+# out_of_scope exists only to carve holes out of a WIDER include (e.g.
+# in_scope: .example.com  minus  admin.example.com).
+engagement:
+  name: Home Network Audit
+scope:
+  in_scope:
+    - 192.168.1.1        # the router
+    - 192.168.1.57       # this laptop (mako)
+  out_of_scope: []
+    # To sweep the whole LAN later, replace the two entries above with:
+    #   - 192.168.1.0/24

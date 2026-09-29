@@ -155,7 +155,7 @@ def cmd_recon(args) -> None:
         try:
             result = scan_target(guard, store, target,
                                  port_spec=args.ports, run_dirs=not args.no_dirs,
-                                 subdomain_enum=args.subs)
+                                 subdomain_enum=args.subs, rps=args.rps)
         except ScopeError as e:
             say(f"  {RED}[SCOPE] refused: {e}{R}")
             continue
@@ -274,6 +274,9 @@ def main(argv=None) -> None:
     rp.add_argument("--no-dirs", action="store_true", help="skip content discovery stage")
     rp.add_argument("--subs", action="store_true",
                     help="passive subdomain enumeration first (crt.sh, scope-filtered)")
+    rp.add_argument("--rps", type=float, default=0,
+                    help="rate limit in requests/second (e.g. --rps 60 to honor "
+                         "program caps like Goldman Sachs's 60 req/s policy)")
 
     mp = sub.add_parser("modules", help="list modules")
 

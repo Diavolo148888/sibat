@@ -6,6 +6,7 @@ import concurrent.futures as _cf
 
 from ..core.models import Finding
 from ..core.scope import ScopeGuard
+from ..utils.net import RateLimiter
 from .web import http_probe
 
 PATHS = [
@@ -66,7 +67,13 @@ def _check(ip: str, port: int, tls: bool, path: str):
     return None
 
 
-def run(guard: ScopeGuard, findings: list[Finding], workers: int = 12) -> list[Finding]:
+def _check_r(ip: str, port: int, tls: bool, path: str, limiter: RateLimiter):
+    limiter.wait()
+    return _check(ip, port, tls, path)
+
+
+def run(guard: ScopeGuard, findings: list[Finding], workers: int = 12, rps: float = 0) -> list[Finding]:
+    limiter = RateLimiter(rps)
     web_targets: list[tuple[str, int, bool]] = []
     for f in findings:
         if f.category == "web" and f.port:
@@ -86,7 +93,7 @@ def run(guard: ScopeGuard, findings: list[Finding], workers: int = 12) -> list[F
         guard.assert_target(ip)
     for ip, port, tls in targets:
         with _cf.ThreadPoolExecutor(max_workers=workers) as pool:
-            futs = [pool.submit(_check, ip, port, tls, p) for p in PATHS]
+            futs = [pool.submit(_check_r, ip, port, tls, p, limiter) for p in PATHS]
             for fut in futs:
                 try:
                     r = fut.result()

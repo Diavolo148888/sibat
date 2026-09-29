@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import ipaddress
 import socket
+import threading
+import time
 import concurrent.futures as _cf
 from typing import Callable, Iterable, Optional, TypeVar
 
@@ -11,6 +13,32 @@ T = TypeVar("T")
 R = TypeVar("R")
 
 _PRIVATE_HINTS = ("localhost", ".local", ".internal", ".lab", ".test")
+
+
+class RateLimiter:
+    """Thread-safe token pacing: at most ``rps`` events start per second.
+
+    One limiter is shared across the whole scan (all threads call wait()
+    before touching the network). rps=0 or None means unlimited.
+    Used to honor program policies like "limit automated scanning to
+    60 requests per second".
+    """
+
+    def __init__(self, rps: float | None):
+        self.min_interval = (1.0 / rps) if (rps and rps > 0) else 0.0
+        self._lock = threading.Lock()
+        self._next_time = 0.0
+
+    def wait(self) -> None:
+        if self.min_interval <= 0:
+            return
+        with self._lock:
+            now = time.monotonic()
+            scheduled = max(now, self._next_time)
+            self._next_time = scheduled + self.min_interval
+        sleep_for = scheduled - time.monotonic()
+        if sleep_for > 0:
+            time.sleep(sleep_for)
 
 
 def is_ip(value: str) -> bool:

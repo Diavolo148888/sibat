@@ -13,7 +13,8 @@ from . import resolver, ports, services, web, dirs, subdomains, cors, jslinks
 
 def scan_target(guard: ScopeGuard, store: Store, target: str,
                 port_spec: str = "top", store_findings: bool = True,
-                run_dirs: bool = True, subdomain_enum: bool = False) -> dict:
+                run_dirs: bool = True, subdomain_enum: bool = False,
+                rps: float = 0) -> dict:
     """Full pipeline for one target. Returns a dict with findings + stats."""
     t0 = time.time()
     started = utcnow()
@@ -35,7 +36,7 @@ def scan_target(guard: ScopeGuard, store: Store, target: str,
         if not ips:
             continue
 
-        port_findings = ports.run(guard, ips, port_spec=port_spec)
+        port_findings = ports.run(guard, ips, port_spec=port_spec, rps=rps)
         findings.extend(port_findings)
 
         findings.extend(services.run(guard, port_findings))
@@ -46,7 +47,7 @@ def scan_target(guard: ScopeGuard, store: Store, target: str,
         findings.extend(jslinks.run(guard, web_findings))
 
         if run_dirs:
-            findings.extend(dirs.run(guard, web_findings + port_findings))
+            findings.extend(dirs.run(guard, web_findings + port_findings, rps=rps))
 
     findings = Finding.dedupe(findings)
     elapsed = time.time() - t0
