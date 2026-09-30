@@ -8,5 +8,5 @@ Every network operation passes through the ScopeGuard. If a target is not
 inside the loaded rules of engagement, the weapon refuses to fire.
 """
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 UA = f"SIBAT/{__version__} (authorized-scope recon; contact via program policy)"

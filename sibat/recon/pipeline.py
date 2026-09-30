@@ -8,7 +8,7 @@ from ..core.db import Store, utcnow
 from ..core.models import Finding
 from ..core.scope import ScopeGuard
 from .. import __version__
-from . import resolver, ports, services, web, dirs, subdomains, cors, jslinks
+from . import resolver, ports, services, web, dirs, subdomains, cors, jslinks, takeover
 
 
 def scan_target(guard: ScopeGuard, store: Store, target: str,
@@ -28,6 +28,8 @@ def scan_target(guard: ScopeGuard, store: Store, target: str,
             subs, sub_finds = subdomains.run(guard, target)
             findings.extend(sub_finds)
             scan_targets.extend(subs)
+            # takeover check on every discovered + original host (pure DNS)
+            findings.extend(takeover.run(guard, scan_targets))
 
     all_counts: dict[str, int] = {}
     for tgt in scan_targets:
